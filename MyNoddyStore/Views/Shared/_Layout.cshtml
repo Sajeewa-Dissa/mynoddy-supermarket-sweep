@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <script src="~/Scripts/helperScriptJs.js"></script>
+    <script src="~/Scripts/jquery-3.3.1.min.js"></script>
+    <script src="~/Scripts/modernizr-2.8.3.js"></script>
+    <title>@ViewBag.Title</title>
+    <link rel="icon" href="~/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="~/favicon.ico" type="image/x-icon" />
+</head>
+<body>
+    <div class="navbar navbar-inverse" role="navigation">
+        <span style="color:white;" class="mynavbarheading hidden-lg">MyNoddy Supermarket Sweep</span>
+        <span style="color:white; font-size:larger;" class="mynavbarheading visible-lg">MyNoddy Supermarket Sweep</span>
+
+        @Html.Action("Summary", "Cart")
+    </div>
+    <div class="visible-xs">
+        @Html.Action("Menu", "Nav", new { horizontalLayout = true })
+    </div>
+
+    <div class="row panel">
+        <div class="col-sm-3 hidden-xs">
+            @Html.Action("Menu", "Nav")
+        </div>
+        <div class="col-xs-12 col-sm-8">
+            @RenderBody()
+        </div>
+    </div>
+
+
+<script>
+    var countdownCtrl = document.getElementById("countdownClock");
+    var checkoutUrl = $('#btnCheckout').attr('href');     // returns the target URL of the checkout button
+    var checkoutUrl2 = $('#btnCheckout2').attr('href');   // ditto for secondary checkout button
+    var remaining = @Html.Raw(Model.CountDownMilliseconds);
+    var countDownDate = new Date();
+    countDownDate.setMilliseconds(countDownDate.getMilliseconds() + remaining);
+
+    // Update the countdown immediately and then every quarter of a second (otherwise it lags between page refresh and redirects)
+    RunCountdown(); //note this function is called on each page refresh, even after the timer has stopped. This is important for adding querystring to checkout.
+    var xInterval = setInterval(RunCountdown, 250);
+
+    function RunCountdown() {
+        // Get todays date and time
+        let now = new Date().getTime();
+
+        // Find the duration between now and the count down date
+        let  duration = countDownDate - now;
+
+        // Time calculations for days, hours, minutes and seconds
+        //var days = Math.floor(duration / (1000 * 60 * 60 * 24));
+        //var hours = Math.floor((duration % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        //var minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
+        let seconds = Math.floor((duration % (1000 * 60)) / 1000);
+        let formattedSeconds = seconds.toString().padStart(2, '0');
+
+        // Display the result"
+        countdownCtrl.textContent = formattedSeconds;
+
+        // If the count down is within 5000 milliseconds, make the chekout buttons glow using css class.
+        if (duration < 5000) {
+            $('#btnCheckout').addClass("glowing");
+            $('#btnCheckout2').addClass("glowing");
+        }
+
+        // If the count down is finished, cancel the countdown
+        if (duration < 0) {
+            clearInterval(xInterval);
+            countdownCtrl.textContent = "00";
+
+            //stop checkout buttons glowing any longer
+            $('#btnCheckout').removeClass("glowing");
+            $('#btnCheckout2').removeClass("glowing");
+
+            //add a querystring to the checkout buttons;
+            $('#btnCheckout').attr('href', checkoutUrl + '?outOfTime=1');
+            if (checkoutUrl2 != null) {
+                $('#btnCheckout2').attr('href', checkoutUrl2 + '?outOfTime=1');
+            }
+        }
+    }
+
+</script>
+
+</body>
+</html>

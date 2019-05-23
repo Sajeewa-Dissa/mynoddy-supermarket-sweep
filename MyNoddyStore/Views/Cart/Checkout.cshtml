@@ -1,0 +1,292 @@
+﻿@model List<MyNoddyStore.Entities.MergedCartLine>
+@{
+    ViewBag.Title = "MyNoddy Supermarket Sweep: Results";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-3.3.1.min.js"></script>
+    <script src="~/Scripts/modernizr-2.8.3.js"></script>
+    <script src="~/Scripts/sketch.min.js"></script>
+    <title>@ViewBag.Title</title>
+    <link rel="icon" href="~/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="~/favicon.ico" type="image/x-icon" />
+</head>
+<body onload="ShowSplash()">
+    <div id="splashscreen">
+
+        <div id="container">
+            <span id="splashmsg" class="myFriendlyFont myUserFontColor">Please wait</span>
+        </div>
+
+    </div>
+    @Html.ValidationSummary(false, "Checkout", new { @class = "text-danger" })
+
+    <div id="resultsTableWrapper">
+        <p id="msgResultContainer" class="myFriendlyFont myUserFontColor">@(ViewBag.UserMessage)</p>
+        <h2>Cart Totals</h2>
+        <table id="resultsTable" class="table table-header-rotated fixed_headers">
+            <thead>
+                <tr>
+                    <!-- First column header is not rotated -->
+                    <th class="res-itemth"><div><span>Item</span></div></th>
+                    <th class="rotate-45 res-priceth"><div><span><br>Price (£)</span></div></th>
+                    <th class="rotate-45 res-qntyth"><div><span>Your Qty.</span></div></th>
+                    <th class="rotate-45 res-subtotth"><div><span><br>Subtotal (£)</span></div></th>
+                    <th class="rotate-45 res-npc-qntyth"><div><span>NPC Qty.</span></div></th>
+                    <th class="rotate-45 res-npc-subtotth"><div><span><br>Subtotal (£)</span></div></th>
+                    <!-- Last column header is not rotated -->
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (MyNoddyStore.Entities.MergedCartLine line in Model)
+                {
+                    <tr>
+                        <td class="text-left res-itemtd">@line.Product.Name</td>
+                        <td class="text-right res-pricetd">@line.Product.Price.ToString()</td>
+                        <td class="text-right res-qntytd">@line.Quantity</td>
+                        <td class="text-right res-subtottd">
+                            @line.ComputedUserTotal.ToString()
+                        </td>
+                        <td class="text-right res-npc-qntytd">@line.QuantityOther</td>
+                        <td class="text-right res-npc-subtottd">@line.ComputedAITotal.ToString()</td>
+                        <td></td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr class="tablefoot">
+                    <td class="text-left res-itemtd">Total:</td>
+                    <td class="text-right res-pricetd"></td>
+                    <td class="text-right res-qntytd">@(ViewBag.UserQuanTotal.ToString())</td>
+                    <td class="text-right res-subtottd">@(ViewBag.UserTotal.ToString("c0"))</td>
+                    <td class="text-right res-npc-qntytd">@(ViewBag.AIQuanTotal.ToString())</td>
+                    <td class="text-right res-npc-subtottd">@(ViewBag.AITotal.ToString("c0"))</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+        <br />
+        <p class="myUserFontColor msgSummaryContainer" style="font-weight:700; padding-left:0.5em;">
+            Your cart: @(ViewBag.UserQuanTotal.ToString()) item(s), @(ViewBag.UserTotal.ToString("c0")).<br />
+            NPC cart: @(ViewBag.AIQuanTotal.ToString()) item(s), @(ViewBag.AITotal.ToString("c0")).
+        </p>
+    </div>
+
+    <div class="text-center pad-above-button-group">
+        @Html.ActionLink(linkText: "Play again", actionName: "Restart", controllerName: "Product", routeValues: null, htmlAttributes: new { @class = "btn btn-primary" })
+        @Html.ActionLink(linkText: "Home", actionName: "Index", controllerName: "Home", routeValues: null, htmlAttributes: new { @class = "btn btn-primary" })
+    </div>
+
+    <script>
+    const gameResultSuccessMsg = "Congratulations, you have won! gg";
+
+        $(window).on("load", SetTableClassFn);    //same as calling this:- $( document ).ready( SetTableClassFn );
+        $(window).on("resize", SetTableClassFn);
+
+        function SetTableClassFn() {
+            if ($(window).width() < 768) {
+                $('#resultsTable').addClass('table-header-rotated');
+                $('#resultsTable').removeClass('table-header-horiz');
+            } else {
+                $('#resultsTable').addClass('table-header-horiz');
+                $('#resultsTable').removeClass('table-header-rotated');
+            }
+        }
+
+        function ShowSplash(){
+            $('#splashmsg').fadeOut(1800);
+
+            //show an animation if the game was won.
+            var resultsMsg = $("#msgResultContainer").text();
+            if (resultsMsg == gameResultSuccessMsg) {
+               setTimeout(() => {
+                    $('#splashscreen').fadeOut(1500); }, 4500);
+            } else {
+               setTimeout(() => {
+                    $('#splashscreen').fadeOut(1800); }, 1800);
+            }
+        }
+
+// #region particle code lift
+
+    function Particle( x, y, radius ) {
+    this.init( x, y, radius );
+    }
+
+    Particle.prototype = {
+
+	    init: function( x, y, radius ) {
+
+		    this.alive = true;
+
+		    this.radius = radius || 10;
+		    this.wander = 0.15;
+		    this.theta = random( TWO_PI );
+		    this.drag = 0.92;
+		    this.color = '#fff';
+
+		    this.x = x || 0.0;
+		    this.y = y || 0.0;
+
+		    this.vx = 0.0;
+		    this.vy = 0.0;
+	    },
+
+	    move: function() {
+
+		    this.x += this.vx;
+		    this.y += this.vy;
+
+		    this.vx *= this.drag;
+		    this.vy *= this.drag;
+
+		    this.theta += random( -0.5, 0.5 ) * this.wander;
+		    this.vx += sin( this.theta ) * 0.1;
+		    this.vy += cos( this.theta ) * 0.1;
+
+		    this.radius *= 0.96;
+		    this.alive = this.radius > 0.5;
+	    },
+
+	    draw: function( ctx ) {
+
+		    ctx.beginPath();
+		    ctx.arc( this.x, this.y, this.radius, 0, TWO_PI );
+		    ctx.fillStyle = this.color;
+		    ctx.fill();
+	    }
+    };
+
+    // ----------------------------------------
+    // Example
+    // ----------------------------------------
+
+    var MAX_PARTICLES = 280;
+    var COLOURS = [ '#69D2E7', '#A7DBD8', '#E0E4CC', '#F38630', '#FA6900', '#FF4E50', '#F9D423' ];
+
+    var particles = [];
+    var pool = [];
+
+    var demo = Sketch.create({
+	    container: document.getElementById( 'container' )
+    });
+
+    demo.setup = function () {
+        //only show the animation if the game was won.
+        var resultsMsg = $("#msgResultContainer").text();
+        if (resultsMsg == gameResultSuccessMsg) {
+            myArray = GetTimerArray();
+            for (var i = 0; i < myArray.length; i++) { 
+                setTimeout(RunSpawn, myArray[i]);
+            }
+         }
+    };
+
+    //generate array with random numbers representing milliseconds
+    function GetTimerArray(){
+
+        var min=1500; 
+        var stepup= 2700;
+        var stepdown=3300;
+        var max=4000;
+
+        var arr = [];
+        //generate 5 rands evenly
+        for (var i=0; i<10; i++) {
+            arr.push(Math.floor(Math.random() * (+max - +min)) + +min);
+        }
+        //add 5 more rands between the two steps (create a climax)
+        for (var i=0; i<10; i++) {
+            arr.push(Math.floor(Math.random() * (+stepdown - +stepup)) + +stepup);
+        }
+        return arr; 
+    }
+
+
+    function RunSpawn(){
+	    var i, x, y;
+
+        var minX= demo.width * 0.25; 
+        var maxX= demo.width * 0.75;
+        var randomX =Math.floor(Math.random() * (+maxX - +minX)) + +minX; 
+
+        var minY= demo.height * 0.25; 
+        var maxY= demo.height * 0.75;
+        var randomY =Math.floor(Math.random() * (+maxY - +minY)) + +minY; 
+
+
+	    for ( i = 0; i < 20; i++ ) {
+            x = randomX; 
+		    y = randomY;
+		    demo.spawn( x, y );
+	    }
+    }
+
+    demo.spawn = function( x, y ) {
+
+	    if ( particles.length >= MAX_PARTICLES )
+		    pool.push( particles.shift() );
+
+	    particle = pool.length ? pool.pop() : new Particle();
+	    particle.init( x, y, random( 5, 40 ) );
+
+	    particle.wander = random( 0.5, 2.0 );
+	    particle.color = random( COLOURS );
+	    particle.drag = random( 0.9, 0.99 );
+
+	    theta = random( TWO_PI );
+	    force = random( 2, 8 );
+
+	    particle.vx = sin( theta ) * force;
+	    particle.vy = cos( theta ) * force;
+
+	    particles.push( particle );
+    }
+
+    demo.update = function() {
+
+	    var i, particle;
+
+	    for ( i = particles.length - 1; i >= 0; i-- ) {
+
+		    particle = particles[i];
+
+		    if ( particle.alive ) particle.move();
+		    else pool.push( particles.splice( i, 1 )[0] );
+	    }
+    };
+
+    demo.draw = function() {
+
+	    demo.globalCompositeOperation  = 'lighter';
+	
+	    for ( var i = particles.length - 1; i >= 0; i-- ) {
+		    particles[i].draw( demo );
+	    }
+    };
+
+    //demo.mousemove = function() {
+
+	   // var particle, theta, force, touch, max, i, j, n;
+
+	   // for ( i = 0, n = demo.touches.length; i < n; i++ ) {
+
+		  //  touch = demo.touches[i], max = random( 1, 4 );
+		  //  for ( j = 0; j < max; j++ ) demo.spawn( touch.x, touch.y );
+	   // }
+    //};
+
+// #endregion
+
+
+    </script>
+</body>
+</html>

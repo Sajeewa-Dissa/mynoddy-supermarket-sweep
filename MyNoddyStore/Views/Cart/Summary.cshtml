@@ -1,0 +1,48 @@
+﻿
+@model MyNoddyStore.Entities.Cart
+
+    <div class="navbar-right">
+        <div class="navbar-text hidden-xs my-fa-home-icon">
+            <a href=@Url.Action("Index", "Home")
+               class="navbar-text btn navbar-btn">
+                <span class="fa fa-home" style="font-size:24px"></span>
+            </a>
+        </div>
+
+        <div class="clockWrapper">
+            <div class="innerClockWrapper">
+                <span id="countdownClock"></span>
+            </div>
+        </div>
+
+        <div class="navbar-text cartsummarytext">
+            <b>Your cart:</b><br />
+            @Model.Lines.Sum(x => x.Quantity) item(s),
+            @Model.ComputeTotalValue().ToString("c0")
+        </div>
+
+        <div class="navbar-text  cartsummarytext hidden-xs">
+            <b>NPC cart:</b><br />
+            @Model.LinesOther.Sum(x => x.Quantity) item(s),
+            @Model.ComputeTotalValueOther().ToString("c0")
+        </div>
+
+        <div id="summaryCartBtnWrapper" class="navbar-text">
+            @Html.ActionLink("View Cart", "Index", "Cart",
+            //new { returnUrl = Request.Url.PathAndQuery },
+            new { returnUrl = Request.Url.GetLeftPart(UriPartial.Path)},
+            new { @class = "btn btn-success navbar-btn disabled"}) 
+        </div>
+
+        <div class="navbar-text">
+            @Html.ActionLink("Checkout", "CheckoutCaller", "Cart",
+            null, //new { returnUrl = Request.Url.PathAndQuery },
+            //new { @class = "btn btn-default navbar-btn" })
+            new { @class = "btn btn-default navbar-btn", id = "btnCheckout" })
+        </div>
+
+    </div>
+
+
+
+
